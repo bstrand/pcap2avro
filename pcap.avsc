@@ -1,0 +1,28 @@
+{"namespace": "com.insightdataengineering.avro",
+ "type": "record",
+ "name": "ip_header",
+ "fields": [
+     {"name": "version", "type": "fixed", "size": "1"},
+     {"name": "header_length", "type": "fixed", "size": "1"},
+     {"name": "diffserv", "type": "fixed", "size": "1"},
+     {"name": "total_length", "type": "fixed", "size": "8"},
+     {"name": "identification", "type": "fixed", "size": "2"},
+     {"name": "do_not_fragment", "type": "boolean"},
+     {"name": "more_fragments",  "type": "boolean"},
+     {"name": "fragment_offset", "type": "fixed", "size": "2"},
+     {"name": "TTL", "type": "fixed", "size": "1"},
+     {"name": "protocol", "type": "fixed", "size": "1"},
+     {"name": "checksum", "type": "fixed", "size": "2"},
+     {"name": "source", "type": "fixed", "size": "4"},
+     {"name": "destination", "type": "fixed", "size": "4"},
+
+//     {"name": "checksum_valid", "type": ["null", "boolean"]},
+     {
+       "name": "protocol_name",
+       "type": "enum",
+       "symbols": ["ICMP", "IGMP", "GGP", "TCP", "UDP", "MUX", "RDP", "ENCAP", "OSPF", "SCTP"]
+     }
+ ],
+
+
+}
