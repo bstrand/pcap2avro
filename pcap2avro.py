@@ -39,7 +39,7 @@ def proto_id_to_name(p):
 def main():
     # args = parse_args()
     infile = "/Users/bstrand/insight/pcaps/live/live-20150123.pcap"
-    outfile = "/Users/bstrand/insight/pcaps/live/live-20150123.pcap"
+    outfile = "/Users/bstrand/insight/pcaps/live/live-20150123.avro"
 
     try:
         schema = avro.schema.parse(open("/Users/bstrand/insight/pcap2avro/tcp.avsc").read())
@@ -91,9 +91,9 @@ def main():
               % (src, tcp.sport, dst, tcp.dport, proto, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win)
 
         writer.append({
-            "timestamp": str(ts),
-            "ip_TTL": str(ip.ttl),
-            "ip_proto": proto,
+            "timestamp": ts,
+            "ip_TTL": ip.ttl,
+            "ip_protocol": proto,
             "ip_src": src,
             "ip_dst": dst,
             "ip_pkt_len": ip.len,
