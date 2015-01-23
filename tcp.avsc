@@ -10,8 +10,8 @@
      {"name": "ip_pkt_len", "type": "int"},
      {"name": "tcp_src_port", "type": "int"},
      {"name": "tcp_dst_port", "type": "int"},
-     {"name": "tcp_seq_num", "type": "int"},
-     {"name": "tcp_ack_num", "type": "int", "default": "0"},
+     {"name": "tcp_seq_num", "type": "long"},
+     {"name": "tcp_ack_num", "type": "long", "default": "0"},
      {"name": "tcp_flags", "type": "int"},
      {"name": "tcp_window", "type": "int"}
  ]
