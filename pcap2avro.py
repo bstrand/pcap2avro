@@ -9,6 +9,8 @@ import avro.schema
 from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 
+from kafka import *
+
 def parse_args():
     parser = argparse.ArgumentParser(description='pcap2avro - Serialize IP packets from pcap files into Avro format')
     parser.add_argument('pcap_files', metavar='file', nargs='+',
@@ -38,8 +40,8 @@ def proto_id_to_name(p):
 
 def main():
     # args = parse_args()
-    infile = "/Users/bstrand/insight/pcaps/live/live-20150123.pcap"
-    outfile = "/Users/bstrand/insight/pcaps/live/live-20150123.avro"
+    infile = "/Users/bstrand/insight/pcaps/bigPcap/5gb-tcp-connection.pcap"
+    outfile = "/Users/bstrand/insight/pcaps/bigPcap/5gb-tcp-connection.avro"
 
     try:
         schema = avro.schema.parse(open("/Users/bstrand/insight/pcap2avro/tcp.avsc").read())
@@ -58,6 +60,10 @@ def main():
     except:
         print "Failed to parse " + infile
         sys.exit()
+
+    mykafka = KafkaClient("bstrand-kafka01:9092")
+    producer = SimpleProducer(mykafka)
+
 
     try:
         writer = DataFileWriter(open(outfile, "w"), DatumWriter(), schema)
@@ -87,8 +93,9 @@ def main():
         proto = proto_id_to_name(ip.p)
         packetlength = ip.len-ip.hl*4
 
-        print "%s : %d -> %s : %d, proto: %s, len: %d, seq: %d, ack: %d, flags 0x%02x, win %d" \
-              % (src, tcp.sport, dst, tcp.dport, proto, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win)
+        pktStr =  "%s | %s : %d -> %s : %d, len: %d, seq: %d, ack: %d, flags 0x%02x, win %d, proto: %s" \
+              % (ts, src, tcp.sport, dst, tcp.dport, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win, proto)
+        print pktStr
 
         writer.append({
             "timestamp": ts,
@@ -104,6 +111,8 @@ def main():
             "tcp_flags": tcp.flags,
             "tcp_window": tcp.win
         })
+
+        producer.send_messages("pcap_test", pktStr)
 
     writer.close()
 
