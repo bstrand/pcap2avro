@@ -4,6 +4,7 @@ import sys
 import socket
 import argparse
 import dpkt
+import time
 
 import avro.schema
 from avro.datafile import DataFileWriter
@@ -38,37 +39,61 @@ def proto_id_to_name(p):
     else:
         return '???'
 
-def main():
-    # args = parse_args()
-    infile = "/Users/bstrand/insight/pcaps/bigPcap/5gb-tcp-connection.pcap"
-    outfile = "/Users/bstrand/insight/pcaps/bigPcap/5gb-tcp-connection.avro"
 
-    try:
-        schema = avro.schema.parse(open("/Users/bstrand/insight/pcap2avro/tcp.avsc").read())
-    except:
-        print "Failed to parse Avro schema file"
-        sys.exit()
+def init_kafka(endpoint):
+    mykafka = KafkaClient(endpoint)
+    return SimpleProducer(mykafka)
 
+
+def read_pcap(infile):
     try:
         f = open(infile, 'rb')
     except:
         print "Failed to open " + infile
         sys.exit()
-
     try:
         pcap = dpkt.pcap.Reader(f)
+    except ValueError as ve:
+        print "Failed to parse " + infile
+        print ve
+        sys.exit()
     except:
         print "Failed to parse " + infile
         sys.exit()
 
-    mykafka = KafkaClient("bstrand-kafka01:9092")
-    producer = SimpleProducer(mykafka)
+    return pcap
+
+
+def read_avro_schema(fpath):
+    try:
+        schema = avro.schema.parse(open(fpath).read())
+    except:
+        print "Failed to parse Avro schema file " + fpath
+        sys.exit()
+    return schema
+
+
+def main():
+    # Config
+    # args = parse_args()
+    #pcap_file = "/Users/bstrand/insight/pcaps/hptcp.pcap"
+    pcap_file = "/Users/bstrand/insight/pcaps/ppa-capture-files/http.cap"
+    avro_schema_file = "/Users/bstrand/insight/pcap2avro/tcp.avsc"
+    kafka_endpoint = "bstrand-kafka01:9092"
+    test_avro_output = pcap_file + '.avro'
+
+    # Initialize
+    schema = read_avro_schema(avro_schema_file)
+
+    pcap = read_pcap(pcap_file)
+
+   #producer = init_kafka(kafka_endpoint)
 
 
     try:
-        writer = DataFileWriter(open(outfile, "w"), DatumWriter(), schema)
+        writer = DataFileWriter(open(test_avro_output, "w"), DatumWriter(), schema)
     except:
-        print "Failed to open Avro output file %s" % outfile
+        print "Failed to open Avro output file %s" % test_avro_output
         sys.exit()
 
     for ts, buf in pcap:
@@ -93,17 +118,21 @@ def main():
         proto = proto_id_to_name(ip.p)
         packetlength = ip.len-ip.hl*4
 
-        pktStr =  "%s | %s : %d -> %s : %d, len: %d, seq: %d, ack: %d, flags 0x%02x, win %d, proto: %s" \
-              % (ts, src, tcp.sport, dst, tcp.dport, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win, proto)
+        humanTS = '%s.%03d' % (time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(ts)), 0)
+
+        pktStr =  "%s | %s  %s : %d -> %s : %d, len: %d, seq: %d, ack: %d, flags 0x%02x, win %d" \
+              % (humanTS, proto.upper(), src, tcp.sport, dst, tcp.dport, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win )
         print pktStr
 
         writer.append({
             "timestamp": ts,
+
             "ip_TTL": ip.ttl,
             "ip_protocol": proto,
             "ip_src": src,
             "ip_dst": dst,
             "ip_pkt_len": ip.len,
+
             "tcp_src_port": tcp.sport,
             "tcp_dst_port": tcp.dport,
             "tcp_seq_num": tcp.seq,
@@ -112,7 +141,7 @@ def main():
             "tcp_window": tcp.win
         })
 
-        producer.send_messages("pcap_test", pktStr)
+        #producer.send_messages("pcap_bin_test", pktStr)
 
     writer.close()
 

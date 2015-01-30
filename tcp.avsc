@@ -3,11 +3,13 @@
  "name": "tcp_packet",
  "fields": [
      {"name": "timestamp", "type": "float"},
+
      {"name": "ip_TTL", "type": "int"},
      {"name": "ip_protocol", "type": "string"},
      {"name": "ip_src", "type": "string"},
      {"name": "ip_dst", "type": "string"},
      {"name": "ip_pkt_len", "type": "int"},
+
      {"name": "tcp_src_port", "type": "int"},
      {"name": "tcp_dst_port", "type": "int"},
      {"name": "tcp_seq_num", "type": "long"},

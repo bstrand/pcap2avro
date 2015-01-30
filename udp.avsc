@@ -1,0 +1,18 @@
+{
+ "type": "record",
+ "name": "udp_packet",
+ "fields": [
+     {"name": "timestamp", "type": "float"},
+
+     {"name": "ip_TTL", "type": "int"},
+     {"name": "ip_protocol", "type": "string"},
+     {"name": "ip_src", "type": "string"},
+     {"name": "ip_dst", "type": "string"},
+     {"name": "ip_pkt_len", "type": "int"},
+
+     {"name": "udp_src_port", "type": "int"},
+     {"name": "udp_dst_port", "type": "int"},
+     {"name": "udp_len", "type": "int"},
+     {"name": "udp_checksum", "type": "int"}
+ ]
+}
