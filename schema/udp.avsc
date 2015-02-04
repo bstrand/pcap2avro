@@ -1,6 +1,7 @@
 {
+ "namespace": "packet.ip",
  "type": "record",
- "name": "udp_packet",
+ "name": "udp",
  "fields": [
      {"name": "timestamp", "type": "float"},
 

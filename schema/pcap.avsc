@@ -1,7 +1,8 @@
-{"namespace": "com.insightdataengineering.avro",
- "type": "record",
- "name": "ip_header",
- "fields": [
+{
+  "namespace": "net.steepbeach",
+  "type": "record",
+  "name": "ip_header",
+  "fields": [
      {"name": "version", "type": "fixed", "size": "1"},
      {"name": "header_length", "type": "fixed", "size": "1"},
      {"name": "diffserv", "type": "fixed", "size": "1"},
@@ -16,13 +17,11 @@
      {"name": "source", "type": "fixed", "size": "4"},
      {"name": "destination", "type": "fixed", "size": "4"},
 
-//     {"name": "checksum_valid", "type": ["null", "boolean"]},
+     //{"name": "checksum_valid", "type": ["null", "boolean"]},
      {
        "name": "protocol_name",
        "type": "enum",
        "symbols": ["ICMP", "IGMP", "GGP", "TCP", "UDP", "MUX", "RDP", "ENCAP", "OSPF", "SCTP"]
      }
- ],
-
-
+ ]
 }

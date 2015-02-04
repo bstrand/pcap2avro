@@ -1,0 +1,17 @@
+{
+  "namespace": "packet.ip",
+  "type": "record",
+  "name": "icmp",
+  "fields": [
+    {"name": "timestamp", "type": "float"},
+
+    {"name": "ip_TTL",      "type": "int"},
+    {"name": "ip_protocol", "type": "string"},
+    {"name": "ip_src",      "type": "string"},
+    {"name": "ip_dst",      "type": "string"},
+    {"name": "ip_pkt_len",  "type": "int"},
+
+    {"name": "icmp_type",     "type": "int"},
+    {"name": "icmp_code",     "type": "int"}
+  ]
+}

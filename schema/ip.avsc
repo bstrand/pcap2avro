@@ -1,0 +1,27 @@
+{
+  "namespace": "packet.ip",
+  "name": "ip",
+  "type": "record",
+  "fields": [
+    {"name": "ts", "type": "float"},
+
+    {"name": "ttl", "type": "int"},
+    {"name": "proto_id", "type": "int"},
+    {"name": "src_addr", "type": "string"},
+    {"name": "dst_addr", "type": "string"},
+    {"name": "pkt_len", "type": "int"},
+
+    {"name": "tcp", "type":
+      {"type": "record", "name": "tcp_record",
+        "fields": [
+          {"name": "src_port", "type": "int"},
+          {"name": "dst_port", "type": "int"},
+          {"name": "seq_num", "type": "long"},
+          {"name": "ack_num", "type": "long", "default": "0"},
+          {"name": "flags", "type": "int"},
+          {"name": "window", "type": "int"}
+        ]
+      }
+    }
+  ]
+}
