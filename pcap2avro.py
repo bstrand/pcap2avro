@@ -17,9 +17,13 @@ args = []
 def parse_args():
     parser = argparse.ArgumentParser(description='pcap2avro - Serialize IP packets from pcap files into Avro format')
     parser.add_argument('pcap_files', metavar='file', nargs='+',
-                        help='pcap file(s) to serialize')
-    # parser.add_argument('output_file', metavar='out', nargs='+',
-    #                     help='Output file; defaults to <source filename>.avro')
+                        help='pcap files to     serialize into Avro')
+    parser.add_argument('-o', '--out', metavar='output file', nargs='?',
+                        help='Write output to this file')
+    parser.add_argument('-k', '--kafka', metavar='kafka file', nargs='?',
+                        help='Publish messages to Kafka with specified config')
+    parser.add_argument('-s', '--schema', metavar='Avro schema definition', nargs='?',
+                        help='Publish messages to Kafka with specified config')
     parser.add_argument("--debug", help="Write debug output.", action="store_true")
     args = parser.parse_args()
     if args.debug:
@@ -78,7 +82,6 @@ def main():
     global args
     args = parse_args()
     for f in args.pcap_files:
-    #   proc_old_tcp(f)
         ingest_file(f)
 
 def ingest_file(pcap_file):

@@ -5,40 +5,35 @@
   "fields": [
     {"name": "ts", "type": "float"},
 
-    {"name": "ttl", "type": "int"},
-    {"name": "proto_id", "type": "int"},
     {"name": "src_addr", "type": "string"},
+    {"name": "src_port", "type": "int"},
     {"name": "dst_addr", "type": "string"},
-    {"name": "length", "type": "int"},
+    {"name": "dst_port", "type": "int"},
 
-    {"name": "tcp", "type":
-      ["null", {"type": "record", "name": "tcp_headers",
+    {"name": "query", "type":
+      ["null", {"type": "record", "name": "dns_query",
         "fields": [
-          {"name": "src_port", "type": "int"},
-          {"name": "dst_port", "type": "int"},
-          {"name": "seq_num", "type": "long"},
-          {"name": "ack_num", "type": "long", "default": "0"},
-          {"name": "flags", "type": "int"},
-          {"name": "window", "type": "int"}
-        ]
-      }]
-    },
-
-    {"name": "udp", "type":
-      ["null", {"type": "record", "name": "udp_headers",
-        "fields": [
-          {"name": "src_port", "type": "int"},
-          {"name": "dst_port", "type": "int"},
-          {"name": "length", "type": "int"}
-        ]
-      }]
-    },
-
-    {"name": "icmp", "type":
-      ["null", {"type": "record", "name": "icmp_headers",
-        "fields": [
+          {"name": "name", "type": "string"},
           {"name": "type", "type": "int"},
-          {"name": "code", "type": "int"}
+          {"name": "class", "type": "int"},
+          {"name": "user_agent", "type": "string"},
+          {"name": "cookies", "type":
+            ["null", {"type": "map", "name": "request_cookies", "values": "string"}]},
+          {"name": "headers", "type":
+            ["null", {"type": "map", "name": "request_headers", "values": "string"}]}
+        ]
+      }]
+    },
+
+   {"name": "response", "type":
+      ["null", {"type": "record", "name": "dns_response",
+        "fields": [
+          {"name": "status", "type": "int"},
+          {"name": "content_length", "type": "int"},
+          {"name": "content_type", "type": "string"},
+          {"name": "host", "type": "string"},
+          {"name": "headers", "type":
+            ["null", {"type": "map", "name": "request_response", "values": "string"}]}
         ]
       }]
     }
