@@ -9,10 +9,10 @@
     {"name": "proto_id", "type": "int"},
     {"name": "src_addr", "type": "string"},
     {"name": "dst_addr", "type": "string"},
-    {"name": "pkt_len", "type": "int"},
+    {"name": "length", "type": "int"},
 
     {"name": "tcp", "type":
-      {"type": "record", "name": "tcp_record",
+      ["null", {"type": "record", "name": "tcp_headers",
         "fields": [
           {"name": "src_port", "type": "int"},
           {"name": "dst_port", "type": "int"},
@@ -21,7 +21,26 @@
           {"name": "flags", "type": "int"},
           {"name": "window", "type": "int"}
         ]
-      }
+      }]
+    },
+
+    {"name": "udp", "type":
+      ["null", {"type": "record", "name": "udp_headers",
+        "fields": [
+          {"name": "src_port", "type": "int"},
+          {"name": "dst_port", "type": "int"},
+          {"name": "length", "type": "int"}
+        ]
+      }]
+    },
+
+    {"name": "icmp", "type":
+      ["null", {"type": "record", "name": "icmp_headers",
+        "fields": [
+          {"name": "type", "type": "int"},
+          {"name": "code", "type": "int"}
+        ]
+      }]
     }
   ]
 }

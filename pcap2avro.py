@@ -127,22 +127,24 @@ def ingest_file(pcap_file):
                   % (humanTS, proto.upper(), src, tcp.sport, dst, tcp.dport, packetlength, tcp.seq, tcp.ack, tcp.flags, tcp.win )
             print pktStr
 
+        tcp_data = {}
+        tcp_data['src_port'] = tcp.sport
+        tcp_data['dst_port'] = tcp.dport
+        tcp_data['seq_num'] = tcp.seq
+        tcp_data['ack_num'] = tcp.ack
+        tcp_data['flags'] = tcp.flags
+        tcp_data['window'] = tcp.win
+
         writer.append({
             "ts": ts,
 
             "ttl": ip.ttl,
             "proto_id": ip.p,
-            "proto": proto,
             "src_addr": socket.inet_ntoa(ip.src),
             "dst_addr": socket.inet_ntoa(ip.dst),
-            "len": ip.len,
+            "length": ip.len,
 
-            "tcp.src_port": tcp.sport,
-            "tcp.dst_port": tcp.dport,
-            "tcp.seq_num": tcp.seq,
-            "tcp.ack_num": tcp.ack,
-            "tcp.flags": tcp.flags,
-            "tcp.window": tcp.win
+            "tcp": tcp_data
         })
 
         #producer.send_messages("pcap_bin_test", pktStr)
