@@ -1,6 +1,6 @@
 {
   "namespace": "packet",
-  "name": "ip",
+  "name": "dns",
   "type": "record",
   "fields": [
     {"name": "ts", "type": "float"},
