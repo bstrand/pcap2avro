@@ -14,7 +14,7 @@ from avro.io import DatumWriter
 
 
 kafka_endpoint = "ip-172-31-23-112:9092"
-topics = ["test02"]
+topics = ["test01"]
 consumer_group = "test_kafka_consumer"
 kafka_client = kafka.KafkaClient(kafka_endpoint)
 
@@ -58,4 +58,4 @@ except Exception as e:
 
 consumer.commit()
 
-kafka.close()
+kafka_client.close()
