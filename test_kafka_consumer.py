@@ -19,7 +19,7 @@ consumer_group = "test_kafka_consumer"
 kafka_client = kafka.KafkaClient(kafka_endpoint)
 
 topic = topics[0]
-consumer = kafka_client.SimpleConsumer(kafka, consumer_group, topic)
+consumer = kafka.SimpleConsumer(kafka_client, consumer_group, topic)
 
 # reeeeeewiiiiiiind
 #consumer.seek(0, 0)
