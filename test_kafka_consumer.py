@@ -14,7 +14,7 @@ from avro.io import DatumWriter
 
 
 kafka_endpoint = "ip-172-31-23-112:9092"
-topics = ["test01"]
+topics = ["test02"]
 consumer_group = "test_kafka_consumer"
 kafka_client = kafka.KafkaClient(kafka_endpoint)
 
@@ -43,16 +43,16 @@ def deser_message(message):
     datum_reader = avro.io.DatumReader(schema)
 
     pkt = datum_reader.read(decoder)
-    print pkt["proto"]
+    print pkt["proto_id"]
     print pkt["src_addr"]
     print pkt["dst_addr"]
-
+    reader.close()
 
 try:
     messages = consumer.get_messages(count=100, block=False)
     # it looks like we get a TypeError Exception if no new messages exist
     for message in messages:
-        dump_message(message)
+        #dump_message(message)
         deser_message(message)
     print "\n"
     print "Received %s total messages" % (len(messages))
