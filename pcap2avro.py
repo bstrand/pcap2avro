@@ -9,7 +9,6 @@ import socket
 import argparse
 import dpkt
 import io
-#import cStringIO
 from datetime import datetime
 from collections import Counter
 
@@ -151,8 +150,8 @@ def icmp_type_name(type):
 def ingest_file(pcap_file):
     avro_schema_file = "./schema/ip.avsc"
     avro_output_file = pcap_file + '.avro'
-    kafka_endpoint = "ip-172-31-23-112:9092"
-    kafka_topic = "test01"
+    kafka_endpoint = "ip-172-31-23-112::9092"
+    kafka_topic = "test02"
 
     # Initialize
     schema = read_avro_schema(avro_schema_file)
@@ -275,19 +274,6 @@ def ingest_file(pcap_file):
         if args.mode == 'file':
             file_writer.append(packet)
         elif args.mode == 'kafka':
-            # writer =  cStringIO.StringIO()
-            # encoder = avro.io.BinaryEncoder(writer)
-            # datum_writer = avro.io.DatumWriter(schema)
-            #
-            # #producer = SimpleProducer(kafka_conn)
-            # for topic in ["DUMMY_LOG"]:
-            #     writer.truncate(0)
-            #     datum_writer.write(packet, encoder)
-            #     bytes = writer.getvalue()
-            #     print "---"
-            #     print bytes
-            #     #producer.send_messages(topic, bytes)
-
             writer = avro.io.DatumWriter(schema)
             bytes_writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(bytes_writer)
@@ -297,9 +283,6 @@ def ingest_file(pcap_file):
                 producer.send_messages(kafka_topic, bytes)
             except Exception as e:
                 print e
-
-            if args.debug:
-                print "Sent."
 
     if args.mode == 'file':
         file_writer.close()
