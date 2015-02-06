@@ -150,7 +150,7 @@ def icmp_type_name(type):
 def ingest_file(pcap_file):
     avro_schema_file = "./schema/ip.avsc"
     avro_output_file = pcap_file + '.avro'
-    kafka_endpoint = "ip-172-31-23-112::9092"
+    kafka_endpoint = "ip-172-31-23-112:9092"
     kafka_topic = "test02"
 
     # Initialize
