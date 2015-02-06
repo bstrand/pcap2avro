@@ -8,6 +8,7 @@ import sys
 import socket
 import argparse
 import dpkt
+import io
 from datetime import datetime
 from collections import Counter
 
@@ -23,8 +24,8 @@ def parse_args():
                         help='pcap files to     serialize into Avro')
     parser.add_argument('-o', '--out', metavar='output file', nargs='?',
                         help='Write output to this file')
-    parser.add_argument('-k', '--kafka', metavar='kafka file', nargs='?',
-                        help='Publish messages to Kafka with specified config')
+    parser.add_argument('--mode', choices=('file', 'kafka'), nargs='?', default='file',
+                        help='Output mode; ')
     parser.add_argument('-s', '--schema', metavar='Avro schema definition', nargs='?',
                         help='Publish messages to Kafka with specified config')
     parser.add_argument("--debug", help="Write debug output.", action="store_true")
@@ -161,14 +162,15 @@ def ingest_file(pcap_file):
     pcap = read_pcap(pcap_file)
     packet_count = Counter(['total','IP','IPv6','dropped','TCP','UDP','ICMP','error'])
 
-   #producer = init_kafka(kafka_endpoint)
-
-    try:
-        writer = DataFileWriter(open(avro_output_file, "w"), DatumWriter(), schema)
-    except Exception as e:
-        print "Failed to open Avro output file %s" % avro_output_file
-        print e
-        sys.exit()
+    #producer = init_kafka(kafka_endpoint)
+    if args.mode == 'file':
+        #TODO use with to open file
+        try:
+            file_writer = DataFileWriter(open(avro_output_file, "w"), DatumWriter(), schema)
+        except Exception as e:
+            print "Failed to open Avro output file %s" % avro_output_file
+            print e
+            sys.exit()
 
     for ts, buf in pcap:
         packet_count['total'] += 1
@@ -251,7 +253,7 @@ def ingest_file(pcap_file):
             udp_data['dst_port'] = udp.dport
             udp_data['length']   = udp.ulen
 
-        writer.append({
+        packet = {
             "ts": ts,
 
             "ttl": ip.ttl,
@@ -263,11 +265,24 @@ def ingest_file(pcap_file):
             "tcp":  tcp_data,
             "udp":  udp_data,
             "icmp": icmp_data
-        })
+        }
 
-        #producer.send_messages("pcap_bin_test", pktStr)
+        if args.mode == 'file':
+            file_writer.append(packet)
+        elif args.mode == 'kafka':
+            writer = avro.io.DatumWriter(schema)
+            bytes_writer = io.BytesIO()
+            encoder = avro.io.BinaryEncoder(bytes_writer)
+            writer.write(packet, encoder)
+            raw_bytes = bytes_writer.getvalue()
+            print "Avro packet:"
+            print(len(raw_bytes))
+            print(type(raw_bytes))
+            print
 
-    writer.close()
+    if args.mode == 'file':
+        file_writer.close()
+
 
 if __name__ == '__main__':
     main()
