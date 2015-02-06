@@ -1,6 +1,7 @@
 __author__ = 'bstrand'
 
 # TODO convert to class
+# TODO Refactor protocol parsing into methods
 # TODO refactor for config to replace hardcoded settings
 
 import sys
@@ -15,8 +16,6 @@ from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 
 from kafka import *
-
-args = []
 
 def parse_args():
     parser = argparse.ArgumentParser(description='pcap2avro - Serialize IP packets from pcap files into Avro format')
@@ -39,14 +38,14 @@ def parse_args():
 
 
 def proto_has_port(p):
-    return p==6 or p==17
+    return p==dpkt.ip.IP_PROTO_TCP or p==dpkt.ip.IP_PROTO_UDP
 
 def proto_id_to_name(p):
-    if p==2:
+    if p==dpkt.ip.IP_PROTO_ICMP:
         return 'ICMP'
-    elif p==6:
+    elif p==dpkt.ip.IP_PROTO_TCP:
         return 'TCP'
-    elif p == 17:
+    elif p == dpkt.ip.IP_PROTO_UDP:
         return 'UDP'
     else:
         return 'other'
@@ -90,6 +89,68 @@ def main():
     for f in args.pcap_files:
         ingest_file(f)
 
+
+def icmp_type_name(type):
+    if type is dpkt.icmp.ICMP_CODE_NONE:
+        return 'ICMP without codes'
+    elif type is dpkt.icmp.ICMP_ECHOREPLY:
+        return 'echo reply'
+    elif type is dpkt.icmp.ICMP_UNREACH:
+        return 'ICMP dest unreachable'
+    elif type is dpkt.icmp.ICMP_SRCQUENCH:
+        return 'ICMP source quench'
+    elif type is dpkt.icmp.ICMP_REDIRECT:
+        return 'ICMP Redirect'
+    elif type is dpkt.icmp.ICMP_ALTHOSTADDR:
+        return 'ICMP alternate host address'
+    elif type is dpkt.icmp.ICMP_ECHO:
+        return 'ICMP echo'
+    elif type is dpkt.icmp.ICMP_RTRADVERT:
+        return 'ICMP Route advertisement'
+    elif type is dpkt.icmp.ICMP_RTRSOLICIT:
+        return 'ICMP Router solicitation'
+    elif type is dpkt.icmp.ICMP_TIMEXCEED:
+        return 'ICMP time exceeded, code:'
+    elif type is dpkt.icmp.ICMP_PARAMPROB:
+        return 'ICMP ip header bad'
+    elif type is dpkt.icmp.ICMP_TSTAMP:
+        return 'ICMP timestamp request'
+    elif type is dpkt.icmp.ICMP_TSTAMPREPLY:
+        return 'ICMP timestamp reply'
+    elif type is dpkt.icmp.ICMP_INFO:
+        return 'ICMP information request'
+    elif type is dpkt.icmp.ICMP_INFOREPLY:
+        return 'ICMP information reply'
+    elif type is dpkt.icmp.ICMP_MASK:
+        return 'ICMP address mask request'
+    elif type is dpkt.icmp.ICMP_MASKREPLY:
+        return 'ICMP address mask reply'
+    elif type is dpkt.icmp.ICMP_TRACEROUTE:
+        return 'ICMP traceroute'
+    elif type is dpkt.icmp.ICMP_DATACONVERR:
+        return 'ICMP data conversion error'
+    elif type is dpkt.icmp.ICMP_MOBILE_REDIRECT:
+        return 'ICMP mobile host redirect'
+    elif type is dpkt.icmp.ICMP_IP6_WHEREAREYOU:
+        return 'ICMP IPv6 where-are-you'
+    elif type is dpkt.icmp.ICMP_IP6_IAMHERE:
+        return 'ICMP IPv6 i-am-here'
+    elif type is dpkt.icmp.ICMP_MOBILE_REG:
+        return 'ICMP mobile registration req'
+    elif type is dpkt.icmp.ICMP_MOBILE_REGREPLY:
+        return 'ICMP mobile registration reply'
+    elif type is dpkt.icmp.ICMP_DNS:
+        return 'ICMP domain name request'
+    elif type is dpkt.icmp.ICMP_DNSREPLY:
+        return 'ICMP domain name reply'
+    elif type is dpkt.icmp.ICMP_PHOTURIS:
+        return 'ICMP Photuris'
+    elif type is dpkt.icmp.type_MAX:
+        return 'ICMP Type Max'
+    else:
+        return 'ICMP Type Unknown'
+
+
 def ingest_file(pcap_file):
     avro_schema_file = "./schema/ip.avsc"
     #kafka_endpoint = "kafka01.steepbeach.net:6667"
@@ -124,8 +185,8 @@ def ingest_file(pcap_file):
 
         # Parse IP packet; drop anything IPv4/{ICMP,TCP,UDP}
         ip = eth.data
-        if (ip.p not in [2,6,17]):
-            if (ip.p == 41):
+        if ip.p not in [dpkt.ip.IP_PROTO_ICMP, dpkt.ip.IP_PROTO_UDP, dpkt.ip.IP_PROTO_TCP]:
+            if (ip.p == dpkt.ip.IP_PROTO_IP6):
                 packet_count['IPv6'] += 1
             packet_count['dropped'] += 1
             continue
@@ -136,7 +197,7 @@ def ingest_file(pcap_file):
         icmp_data = None
         udp_data = None
 
-        if(args.debug):
+        if args.debug:
             # Do some conversions now
             src = socket.inet_ntoa(ip.src)
             dst = socket.inet_ntoa(ip.dst)
@@ -144,10 +205,22 @@ def ingest_file(pcap_file):
             packetlength = ip.len-ip.hl*4
             humanTS = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f')
 
-        if (ip.p == 2):
+        if ip.p == dpkt.ip.IP_PROTO_ICMP:
             packet_count['ICMP'] += 1
-            # TODO
-        elif (ip.p == 6):
+            icmp = ip.data
+
+            icmp_data = {}
+            icmp_data['type'] = icmp.type
+            icmp_data['typeName'] = icmp_type_name(icmp.type)
+            icmp_data['code'] = icmp.code
+
+            if(args.debug):
+                pktStr =  "%d | %s | %s | %s -> %s %s %d/%d" \
+                      % (packet_count['total'], humanTS, proto, src, dst, \
+                         icmp_data['typeName'], icmp_data['type'], icmp_data['code'])
+                print pktStr
+
+        elif ip.p == dpkt.ip.IP_PROTO_TCP:
             packet_count['TCP'] += 1
             tcp = ip.data
 
@@ -164,11 +237,11 @@ def ingest_file(pcap_file):
             tcp_data['flags']    = tcp.flags
             tcp_data['window']   = tcp.win
 
-        elif (ip.p == 17):
+        elif (ip.p == dpkt.ip.IP_PROTO_UDP):
             packet_count['UDP'] += 1
             udp = ip.data
 
-            if(args.debug):
+            if args.debug:
                 pktStr =  "%d | %s | %s | %s : %d -> %s : %d, len: %d" \
                       % (packet_count['total'], humanTS, proto, src, udp.sport, dst, udp.dport, udp.ulen)
                 print pktStr

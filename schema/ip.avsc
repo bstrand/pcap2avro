@@ -38,6 +38,7 @@
       ["null", {"type": "record", "name": "icmp_headers",
         "fields": [
           {"name": "type", "type": "int"},
+          {"name": "type_name", "type": ["null", "string"]},
           {"name": "code", "type": "int"}
         ]
       }]
