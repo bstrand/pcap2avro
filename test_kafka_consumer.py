@@ -16,10 +16,10 @@ from avro.io import DatumWriter
 kafka_endpoint = "ip-172-31-23-112:9092"
 topics = ["test02"]
 consumer_group = "test_kafka_consumer"
-kafka = kafka.KafkaClient(kafka_endpoint)
+kafka_client = kafka.KafkaClient(kafka_endpoint)
 
 topic = topics[0]
-consumer = (kafka.SimpleConsumer(kafka, consumer_group, topic))
+consumer = kafka_client.SimpleConsumer(kafka, consumer_group, topic)
 
 # reeeeeewiiiiiiind
 #consumer.seek(0, 0)
