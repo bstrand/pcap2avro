@@ -9,6 +9,7 @@ import socket
 import argparse
 import dpkt
 import io
+#import cStringIO
 from datetime import datetime
 from collections import Counter
 
@@ -50,11 +51,6 @@ def proto_id_to_name(p):
         return 'UDP'
     else:
         return 'other'
-
-
-def init_kafka(endpoint):
-    my_kafka = KafkaClient(endpoint)
-    return SimpleProducer(my_kafka)
 
 
 def read_pcap(infile):
@@ -154,8 +150,9 @@ def icmp_type_name(type):
 
 def ingest_file(pcap_file):
     avro_schema_file = "./schema/ip.avsc"
-    #kafka_endpoint = "kafka01.steepbeach.net:6667"
     avro_output_file = pcap_file + '.avro'
+    kafka_endpoint = "kafka01.steepbeach.net:9092"
+    kafka_topic = "test01"
 
     # Initialize
     schema = read_avro_schema(avro_schema_file)
@@ -169,6 +166,14 @@ def ingest_file(pcap_file):
             file_writer = DataFileWriter(open(avro_output_file, "w"), DatumWriter(), schema)
         except Exception as e:
             print "Failed to open Avro output file %s" % avro_output_file
+            print e
+            sys.exit()
+    elif args.mode == 'kafka':
+        try:
+            kafka = KafkaClient(kafka_endpoint)
+            producer = SimpleProducer(kafka)
+        except Exception as e:
+            print "Failed to open Kafka connection at %s" % kafka_endpoint
             print e
             sys.exit()
 
@@ -270,15 +275,32 @@ def ingest_file(pcap_file):
         if args.mode == 'file':
             file_writer.append(packet)
         elif args.mode == 'kafka':
+            # writer =  cStringIO.StringIO()
+            # encoder = avro.io.BinaryEncoder(writer)
+            # datum_writer = avro.io.DatumWriter(schema)
+            #
+            # #producer = SimpleProducer(kafka_conn)
+            # for topic in ["DUMMY_LOG"]:
+            #     writer.truncate(0)
+            #     datum_writer.write(packet, encoder)
+            #     bytes = writer.getvalue()
+            #     print "---"
+            #     print bytes
+            #     #producer.send_messages(topic, bytes)
+
             writer = avro.io.DatumWriter(schema)
             bytes_writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(bytes_writer)
             writer.write(packet, encoder)
-            raw_bytes = bytes_writer.getvalue()
-            print "Avro packet:"
-            print(len(raw_bytes))
-            print(type(raw_bytes))
-            print
+            bytes = bytes_writer.getvalue()
+            try:
+                producer.send_messages(kafka_topic, bytes)
+            except Exception as e:
+                print e
+
+            if args.debug:
+                print "Sent."
+            writer.close()
 
     if args.mode == 'file':
         file_writer.close()
